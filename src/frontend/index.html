@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Serverless demo running on S3, CloudFront, API Gateway, Lambda and DynamoDB." />
+    <title>Serverless Portfolio</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header>
+        <p class="eyebrow">AWS &middot; Terraform &middot; GitHub Actions</p>
+        <h1>Serverless Portfolio</h1>
+        <p class="lede">
+          Static assets from S3 through CloudFront. Everything under
+          <code>/api/*</code> is proxied to an HTTP API backed by Lambda and
+          DynamoDB — same origin, so no CORS anywhere.
+        </p>
+      </header>
+
+      <section class="status" aria-live="polite">
+        <span class="dot" id="health-dot"></span>
+        <span id="health-text">Checking API…</span>
+      </section>
+
+      <section>
+        <h2>Leave a message</h2>
+        <form id="item-form" autocomplete="off">
+          <label class="visually-hidden" for="message">Message</label>
+          <input
+            id="message"
+            name="message"
+            type="text"
+            maxlength="280"
+            placeholder="Say something…"
+            required
+          />
+          <button type="submit" id="submit">Post</button>
+        </form>
+        <p class="error" id="error" role="alert" hidden></p>
+      </section>
+
+      <section>
+        <h2>Recent messages</h2>
+        <ul id="items" class="items"></ul>
+        <p class="empty" id="empty" hidden>Nothing here yet.</p>
+      </section>
+
+      <footer>
+        <p>
+          Items expire automatically via DynamoDB TTL. Infrastructure defined in
+          Terraform, deployed by GitHub Actions using OIDC.
+        </p>
+      </footer>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

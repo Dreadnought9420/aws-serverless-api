@@ -1,0 +1,16 @@
+# Each entry needs a justification in docs/security.md. Nothing gets ignored
+# silently.
+
+# AVD-AWS-0010 - CloudFront access logging. Standard logging v1 needs S3 ACLs,
+# which conflict with the BucketOwnerEnforced ownership this project enforces;
+# v2 adds recurring CloudWatch ingestion cost. Deferred, documented.
+AVD-AWS-0010
+
+# AVD-AWS-0011 - WAF on the distribution. USD 5/month per Web ACL before a
+# single request; out of scope for a personal project.
+AVD-AWS-0011
+
+# AVD-AWS-0089 - S3 server access logging on the site bucket. Nothing reaches
+# the bucket except CloudFront over OAC, and API access logs already capture
+# the request path that matters.
+AVD-AWS-0089

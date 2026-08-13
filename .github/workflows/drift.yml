@@ -1,0 +1,104 @@
+name: Drift detection
+
+# Scheduled read-only plan. It alerts and never reconciles: silently reverting
+# an out-of-band change is how you turn a small mistake into an outage.
+
+on:
+  schedule:
+    - cron: "0 7 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: terraform-refs/heads/main
+  cancel-in-progress: false
+
+env:
+  TF_VERSION: "1.14.9"
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+
+jobs:
+  detect:
+    name: Detect drift
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      issues: write
+    defaults:
+      run:
+        working-directory: terraform
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Assume the read-only plan role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_PLAN_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: gha-drift-${{ github.run_id }}
+
+      - name: terraform init
+        run: |
+          terraform init -input=false \
+            -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
+            -backend-config="key=${{ vars.TF_STATE_KEY }}" \
+            -backend-config="region=${{ vars.AWS_REGION }}"
+
+      # Exit codes: 0 = no drift, 1 = plan failed, 2 = drift detected.
+      - name: terraform plan -detailed-exitcode
+        id: plan
+        continue-on-error: true
+        run: |
+          set +e
+          terraform plan -input=false -lock-timeout=5m -detailed-exitcode -no-color \
+            -var="alert_email=${{ vars.ALERT_EMAIL }}" \
+            -var="aws_region=${{ vars.AWS_REGION }}" \
+            -var="repository_url=${{ github.server_url }}/${{ github.repository }}" \
+            > drift.txt 2>&1
+          echo "exitcode=$?" >> "$GITHUB_OUTPUT"
+          tail -c 8000 drift.txt
+
+      - name: Fail the job if the plan itself broke
+        if: steps.plan.outputs.exitcode == '1'
+        run: |
+          echo "::error::terraform plan failed; drift status is unknown."
+          exit 1
+
+      - name: Open or update a drift issue
+        if: steps.plan.outputs.exitcode == '2'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync('terraform/drift.txt', 'utf8').slice(-50000);
+            const title = 'Infrastructure drift detected';
+            const body = [
+              'The scheduled plan found differences between the deployed infrastructure and the committed configuration.',
+              '',
+              'Review the change before doing anything. Do not apply blindly: the drift may be a legitimate emergency fix that belongs in code, or an unauthorised change that needs investigating.',
+              '',
+              '<details><summary>Plan output</summary>',
+              '',
+              '```terraform',
+              plan,
+              '```',
+              '',
+              '</details>',
+            ].join('\n');
+            const { data: issues } = await github.rest.issues.listForRepo({
+              ...context.repo, state: 'open', labels: 'drift',
+            });
+            const existing = issues.find(i => i.title === title);
+            if (existing) {
+              await github.rest.issues.createComment({ ...context.repo, issue_number: existing.number, body });
+            } else {
+              await github.rest.issues.create({ ...context.repo, title, body, labels: ['drift'] });
+            }

@@ -1,0 +1,8 @@
+# Everything needs a review from the repository owner.
+* @Dreadnought9420
+
+# Infrastructure and CI are the highest blast radius paths.
+/terraform/            @Dreadnought9420
+/modules/              @Dreadnought9420
+/bootstrap/            @Dreadnought9420
+/.github/workflows/    @Dreadnought9420

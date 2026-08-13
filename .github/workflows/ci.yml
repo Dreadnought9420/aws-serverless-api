@@ -1,0 +1,172 @@
+name: CI
+
+# Static checks and unit tests. Deliberately has no AWS credentials and no
+# id-token permission: nothing in this workflow may touch a real account, so a
+# malicious pull request cannot reach one.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TF_VERSION: "1.14.9"
+  TF_IN_AUTOMATION: "true"
+
+jobs:
+  fmt:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: terraform fmt
+        run: terraform fmt -check -recursive -diff
+
+  validate:
+    name: Validate (${{ matrix.dir }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        dir:
+          - bootstrap
+          - terraform
+          - modules/static_site
+          - modules/serverless_api
+          - modules/observability
+          - modules/cost_guardrails
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      # -backend=false keeps init offline as far as state is concerned; only
+      # provider plugins are downloaded.
+      - name: terraform init
+        run: terraform init -backend=false -input=false
+        working-directory: ${{ matrix.dir }}
+
+      - name: terraform validate
+        run: terraform validate -no-color
+        working-directory: ${{ matrix.dir }}
+
+  lint:
+    name: TFLint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: latest
+
+      - name: tflint --init
+        run: tflint --init --config "${GITHUB_WORKSPACE}/.tflint.hcl"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: tflint
+        run: tflint --recursive --config "${GITHUB_WORKSPACE}/.tflint.hcl" --format compact
+
+  test:
+    name: Terraform unit tests (${{ matrix.module }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module:
+          - static_site
+          - serverless_api
+          - observability
+          - cost_guardrails
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: terraform init
+        run: terraform init -backend=false -input=false
+        working-directory: modules/${{ matrix.module }}
+
+      # Every test file mocks the aws provider, so this creates nothing and
+      # costs nothing.
+      - name: terraform test
+        run: terraform test -verbose
+        working-directory: modules/${{ matrix.module }}
+
+  security:
+    name: Security scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: .
+          framework: terraform
+          config_file: .checkov.yaml
+          output_format: cli,sarif
+          output_file_path: console,checkov.sarif
+          soft_fail: false
+
+      - name: Trivy config scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: config
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          trivy-config: trivy.yaml
+
+      # Code scanning upload needs GitHub Advanced Security on private repos.
+      # Never let its absence fail the security job.
+      - name: Upload Checkov SARIF
+        if: always()
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: checkov.sarif
+          category: checkov
+
+  python:
+    name: Lambda handler checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install tooling
+        run: pip install ruff mypy boto3-stubs[dynamodb]
+
+      - name: ruff check
+        run: ruff check src/api
+
+      - name: ruff format check
+        run: ruff format --check src/api
+
+      - name: mypy
+        run: mypy src/api

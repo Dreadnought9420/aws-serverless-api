@@ -1,0 +1,33 @@
+version: 2
+
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "ci"
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: terraform
+    directories:
+      - /bootstrap
+      - /terraform
+      - /modules/static_site
+      - /modules/serverless_api
+      - /modules/observability
+      - /modules/cost_guardrails
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "deps"
+    # Provider bumps land in their own pull request, never mixed with a
+    # functional change.
+    open-pull-requests-limit: 4
+
+  - package-ecosystem: pip
+    directory: /src/api
+    schedule:
+      interval: monthly

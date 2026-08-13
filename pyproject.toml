@@ -1,0 +1,39 @@
+# Tooling config for the Lambda handler. There is no package to build: the
+# handler ships as a single module inside a zip produced by Terraform.
+
+[tool.ruff]
+line-length = 110
+target-version = "py313"
+src = ["src/api"]
+
+[tool.ruff.lint]
+select = [
+  "E",   # pycodestyle
+  "F",   # pyflakes
+  "I",   # isort
+  "B",   # bugbear
+  "UP",  # pyupgrade
+  "S",   # bandit
+  "SIM", # simplify
+  "RET", # return consistency
+  "PL",  # pylint
+]
+ignore = [
+  # The handler's catch-all except is the last line of defence in the Lambda
+  # entry point; it logs and returns a 500 rather than leaking a stack trace.
+  "BLE001",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"src/api/handler.py" = ["PLR0911"] # the router legitimately has many returns
+
+[tool.mypy]
+python_version = "3.13"
+files = ["src/api"]
+strict = true
+warn_unreachable = true
+
+# boto3 ships partial type information; the stubs cover what this handler uses.
+[[tool.mypy.overrides]]
+module = ["boto3.*", "botocore.*"]
+ignore_missing_imports = true

@@ -1,0 +1,8 @@
+# Copy to backend.hcl and fill in with the outputs of the bootstrap stack:
+#   terraform -chdir=../bootstrap output
+#
+# Then: terraform init -backend-config=backend.hcl
+
+bucket = "serverless-portfolio-tfstate-123456789012"
+key    = "serverless-portfolio/terraform.tfstate"
+region = "eu-west-1"

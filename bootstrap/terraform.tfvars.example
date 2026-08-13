@@ -1,0 +1,12 @@
+# Copy to terraform.tfvars and fill in. This file is git-ignored.
+
+aws_region        = "eu-west-1"
+project_name      = "serverless-portfolio"
+github_owner      = "Dreadnought9420"
+github_repository = "aws-serverless-api"
+
+# Optional overrides
+# state_bucket_name        = "my-explicit-globally-unique-bucket"
+# github_default_branch    = "main"
+# github_apply_environment = "production"
+# create_oidc_provider     = true

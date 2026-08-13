@@ -1,0 +1,41 @@
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+*.tfplan
+tfplan
+tfdestroy
+plan.txt
+drift.txt
+plan.json
+*.sarif
+
+# Backend config carries the account-specific state bucket name.
+# backend.hcl.example is committed instead.
+backend.hcl
+
+# Build artifacts
+**/.build/
+*.zip
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+*.pem
+credentials

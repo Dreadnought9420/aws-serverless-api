@@ -1,0 +1,14 @@
+# Trivy configuration for the `config` (IaC misconfiguration) scanner.
+# Justifications for every ignored check live in docs/security.md.
+
+severity:
+  - HIGH
+  - CRITICAL
+
+misconfiguration:
+  include-non-failures: false
+
+scan:
+  skip-dirs:
+    - "**/.terraform"
+    - "**/.build"

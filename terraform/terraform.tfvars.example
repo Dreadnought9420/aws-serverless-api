@@ -1,0 +1,17 @@
+# Copy to terraform.tfvars and edit. This file is git-ignored.
+
+aws_region     = "eu-west-1"
+project_name   = "serverless-portfolio"
+environment    = "dev"
+owner          = "valentin"
+repository_url = "https://github.com/Dreadnought9420/aws-serverless-api"
+
+# Confirm the SNS subscription email AWS sends after the first apply,
+# otherwise alarms fire into the void.
+alert_email = "you@example.com"
+
+# Cost controls
+monthly_budget_usd          = 10
+lambda_reserved_concurrency = 10
+log_retention_days          = 14
+cloudfront_price_class      = "PriceClass_100"
