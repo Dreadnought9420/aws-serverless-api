@@ -3,8 +3,8 @@
 aws_region     = "eu-west-1"
 project_name   = "serverless-portfolio"
 environment    = "dev"
-owner          = "valentin"
-repository_url = "https://github.com/Dreadnought9420/aws-serverless-api"
+owner          = "name"
+repository_url = "repo_url"
 
 # Confirm the SNS subscription email AWS sends after the first apply,
 # otherwise alarms fire into the void.
