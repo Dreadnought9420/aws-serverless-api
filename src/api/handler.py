@@ -82,9 +82,14 @@ class ApiError(Exception):
         self.message = message
 
 
-def _log(level: int, event: str, **fields: Any) -> None:
-    """Emit one JSON line so Logs Insights can query fields without a parser."""
-    logger.log(level, json.dumps({"event": event, "service": SERVICE_NAME, **fields}))
+def _log(severity: int, event: str, **fields: Any) -> None:
+    """Emit one JSON line so Logs Insights can query fields without a parser.
+
+    The parameter is `severity`, not `level`: callers pass a human-readable
+    ``level="ERROR"`` through **fields, and naming the positional argument
+    `level` made every call raise TypeError.
+    """
+    logger.log(severity, json.dumps({"event": event, "service": SERVICE_NAME, **fields}))
 
 
 def _response(status: int, body: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -140,7 +145,7 @@ def _public(item: dict[str, Any]) -> dict[str, Any]:
 def create_item(event: dict[str, Any]) -> dict[str, Any]:
     message = _validate_message(_parse_body(event))
     now = int(time.time())
-    item = {
+    item: dict[str, Any] = {
         "pk": PARTITION_KEY,
         "sk": f"{now:011d}~{uuid.uuid4()}",
         "message": message,

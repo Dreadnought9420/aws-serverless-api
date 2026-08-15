@@ -27,7 +27,7 @@ updates:
     # functional change.
     open-pull-requests-limit: 4
 
-  - package-ecosystem: pip
-    directory: /src/api
-    schedule:
-      interval: monthly
+# No pip ecosystem entry on purpose. src/api has no requirements.txt and no
+# third-party dependencies (ADR-0006); pointing Dependabot at it produces a
+# failing "no manifest found" job every month. Add it back the same day a real
+# dependency does.

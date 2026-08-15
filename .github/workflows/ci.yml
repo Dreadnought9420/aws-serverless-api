@@ -46,8 +46,11 @@ jobs:
           - terraform
           - modules/static_site
           - modules/serverless_api
-          - modules/observability
           - modules/cost_guardrails
+          # observability declares a configuration_alias for the CloudFront
+          # alarm, so it cannot be its own root module. Its example wires the
+          # aliased provider up and validates the same module code.
+          - modules/observability/examples/default
     steps:
       - uses: actions/checkout@v4
 

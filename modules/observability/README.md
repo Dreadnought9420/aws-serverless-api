@@ -42,6 +42,24 @@ test asserts it.
 Any other region, or any other dimension value, matches nothing and the alarm
 never fires — silently.
 
+## Validating this module
+
+It cannot be validated as its own root module. `configuration_aliases =
+[aws.us_east_1]` means a caller has to supply the aliased provider, and when the
+module *is* the root there is no caller — `terraform validate` run directly here
+fails on the CloudFront alarm's `provider = aws.us_east_1`.
+
+`examples/default/` is a minimal root that wires both providers up. CI validates
+that, which covers the same module code:
+
+```bash
+terraform -chdir=examples/default init -backend=false
+terraform -chdir=examples/default validate
+```
+
+`terraform test` still runs in this directory, because the test files declare
+`mock_provider "aws" { alias = "us_east_1" }`.
+
 ## SNS encryption
 
 The topic is unencrypted by default and that is deliberate: CloudWatch cannot

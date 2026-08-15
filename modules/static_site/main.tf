@@ -255,6 +255,10 @@ resource "aws_cloudfront_distribution" "site" {
     }
   }
 
+  # The default *.cloudfront.net certificate pins its own minimum protocol
+  # version, so minimum_protocol_version is inert until an ACM certificate and
+  # an aliases block replace it. It is set now so that swap is a one-line
+  # change rather than a security regression waiting to happen.
   viewer_certificate {
     cloudfront_default_certificate = true
     minimum_protocol_version       = "TLSv1.2_2021"

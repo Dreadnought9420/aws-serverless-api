@@ -215,7 +215,7 @@ resource "aws_apigatewayv2_stage" "default" {
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.api_access.arn
 
-    format          = jsonencode({
+    format = jsonencode({
       requestId          = "$context.requestId"
       requestTime        = "$context.requestTime"
       httpMethod         = "$context.httpMethod"

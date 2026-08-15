@@ -38,6 +38,10 @@ jobs:
   plan:
     name: Plan
     runs-on: ubuntu-latest
+    # Dependabot pull requests run with a read-only token and cannot be granted
+    # id-token: write, so the OIDC step can never succeed. An action bump also
+    # cannot change a plan. Skip instead of failing red every week.
+    if: github.actor != 'dependabot[bot]'
     permissions:
       contents: read
       id-token: write

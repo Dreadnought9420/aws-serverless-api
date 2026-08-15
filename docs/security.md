@@ -154,6 +154,21 @@ operational burden is out of proportion to what this stack actually protects:
 | `CKV_AWS_310` | CloudFront origin failover | Needs a second replicated bucket. Single-region by design |
 | `CKV_AWS_374` | CloudFront geo restriction | The site is meant to be reachable from anywhere |
 
+### Confirmed by a real Checkov run
+
+The table above was written ahead of the first CI run. These seven were what
+Checkov actually reported, and each was assessed rather than reflexively
+silenced:
+
+| Check | Control | Why it is accepted |
+| --- | --- | --- |
+| `CKV_AWS_109` | "IAM policy without constraints" on the apply role | The statement *is* constrained to `role/<project>-*`, and the same document carries an explicit `Deny` on both CI roles. Checkov's heuristic does not read `Deny` statements as constraints. `iam:CreateServiceLinkedRole` genuinely requires `Resource: "*"` — AWS rejects anything narrower |
+| `CKV_AWS_116` | Lambda dead letter queue | A DLQ only receives events from **asynchronous** invocation. This function is invoked synchronously by API Gateway, so a failure returns a 5xx to the caller and trips the `api-5xx` alarm. A DLQ here would never receive a single message |
+| `CKV_AWS_309` (×2) | API Gateway v2 route authorization | The API is deliberately public. It is throttled, concurrency-capped, length-validated and TTL-pruned instead |
+| `CKV_AWS_174` | CloudFront viewer certificate TLS ≥ 1.2 | The default `*.cloudfront.net` certificate pins its own minimum protocol version; the argument is inert until an ACM certificate replaces it |
+| `CKV2_AWS_42` | CloudFront custom SSL certificate | Same root cause. Both need an owned domain plus ACM in us-east-1, which would make this repo undeployable from a clean fork — see [ADR-0008](adr/0008-cloudfront-single-origin.md) |
+| `CKV_AWS_145` | S3 default encryption with KMS (site bucket) | SSE-KMS behind CloudFront OAC needs a key policy granting the CloudFront service principal `kms:Decrypt`, and bills a KMS request on every cache miss. The **state** bucket, where it matters, does use SSE-KMS |
+
 **If a scanner reports something new**, either fix it or add it to this table
 with a reason. A suppression with no row here should not pass review.
 

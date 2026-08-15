@@ -3,10 +3,22 @@
 # Two mocked providers are needed because the module declares an aws.us_east_1
 # configuration alias for the CloudFront alarm.
 
-mock_provider "aws" {}
+mock_provider "aws" {
+  mock_data "aws_iam_policy_document" {
+    defaults = {
+      json = "{\"Version\":\"2012-10-17\",\"Statement\":[]}"
+    }
+  }
+}
 
 mock_provider "aws" {
   alias = "us_east_1"
+
+  mock_data "aws_iam_policy_document" {
+    defaults = {
+      json = "{\"Version\":\"2012-10-17\",\"Statement\":[]}"
+    }
+  }
 }
 
 variables {
@@ -34,7 +46,9 @@ run "alarms_treat_no_traffic_as_healthy" {
 }
 
 run "every_alarm_notifies_the_topic" {
-  command = plan
+  # apply, not plan: the topic ARN is only known after apply, and an assert on
+  # an unknown value cannot be evaluated. Still free - the provider is mocked.
+  command = apply
 
   assert {
     condition = alltrue([

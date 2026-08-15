@@ -55,3 +55,34 @@ skip-check:
   # CKV_AWS_374 - CloudFront geo restriction. The site is meant to be reachable
   #               from anywhere.
   - CKV_AWS_374
+  # --- Confirmed by a real CI run, not guessed. See docs/security.md. ---
+  # CKV_AWS_109 - "IAM policies without constraints" on the apply role. The
+  #               statement IS constrained to role/<project>-* and the same
+  #               document carries an explicit Deny on both CI roles; Checkov's
+  #               heuristic does not read Deny statements as constraints.
+  #               iam:CreateServiceLinkedRole genuinely requires Resource "*".
+  - CKV_AWS_109
+  # CKV_AWS_116 - Lambda dead letter queue. A DLQ only receives events from
+  #               ASYNCHRONOUS invocation. This function is invoked
+  #               synchronously by API Gateway, so a failure returns a 5xx to
+  #               the caller and trips the api-5xx alarm. A DLQ here would
+  #               never receive anything.
+  - CKV_AWS_116
+  # CKV_AWS_309 - API Gateway v2 route authorization. The API is deliberately
+  #               public; it is throttled, concurrency-capped, length-validated
+  #               and TTL-pruned instead.
+  - CKV_AWS_309
+  # CKV_AWS_174 - CloudFront viewer certificate TLS >= 1.2, and
+  # CKV2_AWS_42 - CloudFront custom SSL certificate. Same root cause: the
+  #               default *.cloudfront.net certificate is not a custom cert and
+  #               pins its own minimum protocol version. Fixing both needs an
+  #               owned domain plus ACM in us-east-1, which would make this repo
+  #               undeployable from a clean fork. See ADR-0008.
+  - CKV_AWS_174
+  - CKV2_AWS_42
+  # CKV_AWS_145 - S3 default encryption with KMS on the site bucket. SSE-KMS
+  #               behind CloudFront OAC needs a key policy granting the
+  #               CloudFront service principal kms:Decrypt, and bills a KMS
+  #               request on every cache miss. The state bucket, where it
+  #               matters, does use SSE-KMS.
+  - CKV_AWS_145
