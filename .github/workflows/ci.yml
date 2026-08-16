@@ -114,8 +114,12 @@ jobs:
         run: terraform test -verbose
         working-directory: modules/${{ matrix.module }}
 
-  security:
-    name: Security scan
+  # Checkov and Trivy are deliberately separate jobs. They overlap in coverage
+  # but not completely, and when they shared a job a single unresolvable action
+  # killed the whole job at "Set up job" - which silently suppressed the other
+  # scanner's findings rather than reporting them.
+  checkov:
+    name: Checkov
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -133,17 +137,8 @@ jobs:
           output_file_path: console,checkov.sarif
           soft_fail: false
 
-      - name: Trivy config scan
-        uses: aquasecurity/trivy-action@0.36.0
-        with:
-          scan-type: config
-          scan-ref: .
-          severity: HIGH,CRITICAL
-          exit-code: "1"
-          trivy-config: trivy.yaml
-
       # Code scanning upload needs GitHub Advanced Security on private repos.
-      # Never let its absence fail the security job.
+      # Never let its absence fail the job.
       - name: Upload Checkov SARIF
         if: always()
         continue-on-error: true
@@ -151,6 +146,23 @@ jobs:
         with:
           sarif_file: checkov.sarif
           category: checkov
+
+  trivy:
+    name: Trivy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Trivy config scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: config
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          trivy-config: trivy.yaml
 
   python:
     name: Lambda handler checks
