@@ -38,10 +38,12 @@ jobs:
   plan:
     name: Plan
     runs-on: ubuntu-latest
-    # Dependabot pull requests run with a read-only token and cannot be granted
-    # id-token: write, so the OIDC step can never succeed. An action bump also
-    # cannot change a plan. Skip instead of failing red every week.
-    if: github.actor != 'dependabot[bot]'
+    # Two guards:
+    #   - Dependabot runs get a read-only token and cannot be granted
+    #     id-token: write, so the OIDC step can never succeed there.
+    #   - Before ./scripts/bootstrap.sh has been run there is no role to
+    #     assume, so a fresh clone would fail red on every push.
+    if: github.actor != 'dependabot[bot]' && vars.AWS_PLAN_ROLE_ARN != ''
     permissions:
       contents: read
       id-token: write

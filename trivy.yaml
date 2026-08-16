@@ -1,6 +1,11 @@
 # Trivy configuration for the `config` (IaC misconfiguration) scanner.
 # Justifications for every ignored check live in docs/security.md.
 
+# Named explicitly rather than relying on the default: trivy-action has a
+# long-standing issue where .trivyignore is not picked up from the working
+# directory (aquasecurity/trivy-action#436).
+ignorefile: .trivyignore
+
 severity:
   - HIGH
   - CRITICAL

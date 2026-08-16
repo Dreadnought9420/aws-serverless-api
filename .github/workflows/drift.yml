@@ -24,6 +24,9 @@ jobs:
   detect:
     name: Detect drift
     runs-on: ubuntu-latest
+    # Nothing to drift from until the account has been bootstrapped and the
+    # stack applied at least once.
+    if: vars.AWS_PLAN_ROLE_ARN != ''
     permissions:
       contents: read
       id-token: write
