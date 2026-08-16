@@ -23,12 +23,11 @@ to PNG and SVG with:
 make diagram   # needs the draw.io desktop CLI; see docs/diagrams/README.md
 ```
 
-<!-- After running `make diagram`, uncomment the line below to embed the export:
 ![Architecture](docs/diagrams/architecture.drawio.png)
--->
 
-The Mermaid version below is maintained alongside it and renders directly on
-GitHub with no export step:
+The Mermaid version below is maintained alongside the draw.io source and renders
+without an export step, so the architecture is readable even from a shallow
+clone:
 
 ```mermaid
 flowchart LR

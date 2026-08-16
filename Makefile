@@ -103,6 +103,9 @@ invalidate: ## Invalidate the CloudFront cache
 diagram: ## Export the architecture diagram to PNG and SVG
 	$(DRAWIO) -x -f png -e -s 2 -o docs/diagrams/architecture.drawio.png $(DIAGRAM)
 	$(DRAWIO) -x -f svg -e -o docs/diagrams/architecture.svg $(DIAGRAM)
+	# draw.io truncates the IEND chunk on -e PNG exports; strict decoders
+	# reject the result. Idempotent, so it is safe to run every time.
+	python3 scripts/repair_drawio_png.py docs/diagrams/architecture.drawio.png
 
 .PHONY: hooks
 hooks: ## Install the pre-commit hooks
