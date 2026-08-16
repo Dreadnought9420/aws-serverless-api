@@ -108,8 +108,11 @@ run "api_is_http_not_rest" {
     error_message = "The stage must be throttled."
   }
 
+  # Assert the block exists rather than the ARN inside it: destination_arn is
+  # computed, so at plan time it is unknown and a condition that depends on an
+  # unknown value cannot be evaluated.
   assert {
-    condition     = one([for s in aws_apigatewayv2_stage.default.access_log_settings : s.destination_arn]) != ""
+    condition     = length(aws_apigatewayv2_stage.default.access_log_settings) == 1
     error_message = "Access logging must be configured on the stage."
   }
 }

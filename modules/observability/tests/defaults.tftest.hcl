@@ -3,10 +3,19 @@
 # Two mocked providers are needed because the module declares an aws.us_east_1
 # configuration alias for the CloudFront alarm.
 
+# The mock generates random strings for computed attributes, and the real
+# provider schema still validates them. alarm_actions is checked against the
+# SNS/autoscaling/ssm ARN grammar, so the topic ARN has to be well formed.
 mock_provider "aws" {
   mock_data "aws_iam_policy_document" {
     defaults = {
       json = "{\"Version\":\"2012-10-17\",\"Statement\":[]}"
+    }
+  }
+
+  mock_resource "aws_sns_topic" {
+    defaults = {
+      arn = "arn:aws:sns:eu-west-1:123456789012:mock-alerts"
     }
   }
 }
@@ -17,6 +26,12 @@ mock_provider "aws" {
   mock_data "aws_iam_policy_document" {
     defaults = {
       json = "{\"Version\":\"2012-10-17\",\"Statement\":[]}"
+    }
+  }
+
+  mock_resource "aws_sns_topic" {
+    defaults = {
+      arn = "arn:aws:sns:eu-west-1:123456789012:mock-alerts"
     }
   }
 }

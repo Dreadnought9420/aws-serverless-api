@@ -14,3 +14,11 @@ AVD-AWS-0011
 # the bucket except CloudFront over OAC, and API access logs already capture
 # the request path that matters.
 AVD-AWS-0089
+
+# AVD-AWS-0132 - S3 bucket does not use a customer-managed KMS key. Same
+# control as Checkov CKV_AWS_145, already accepted: SSE-KMS behind CloudFront
+# OAC needs a key policy granting the CloudFront service principal
+# kms:Decrypt, and bills a KMS request on every cache miss. The state bucket,
+# where it matters, does use SSE-KMS.
+AVD-AWS-0132
+AWS-0132
