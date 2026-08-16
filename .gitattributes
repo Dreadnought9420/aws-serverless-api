@@ -1,0 +1,23 @@
+# Normalise line endings. This repo is edited on Windows and run on Linux
+# runners: a CRLF shell script fails with "bad interpreter: /usr/bin/env
+# bash^M", and a CRLF Makefile stops parsing its tab-indented recipes.
+# Checking everything out as LF removes the whole class of problem.
+* text=auto eol=lf
+
+# Belt and braces for the files where CRLF is fatal rather than cosmetic.
+*.sh      text eol=lf
+Makefile  text eol=lf
+*.tf      text eol=lf
+*.hcl     text eol=lf
+*.tfvars  text eol=lf
+*.py      text eol=lf
+*.yml     text eol=lf
+*.yaml    text eol=lf
+*.json    text eol=lf
+*.drawio  text eol=lf
+
+# Never touched by normalisation.
+*.png binary
+*.jpg binary
+*.pdf binary
+*.zip binary
